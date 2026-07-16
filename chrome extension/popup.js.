@@ -1,0 +1,131 @@
+let uploadedFiles = [];
+let targetRatio = 1; // Default 1:1 square
+let padding = 20;
+let bgColor = '#ffffff';
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const paddingSlider = document.getElementById('padding-slider');
+const paddingVal = document.getElementById('padding-val');
+const bgColorInput = document.getElementById('bg-color');
+const bgHexInput = document.getElementById('bg-hex');
+const ratio11 = document.getElementById('ratio-1-1');
+const ratio43 = document.getElementById('ratio-4-3');
+const downloadBtn = document.getElementById('download-btn');
+const previewContainer = document.getElementById('preview-container');
+
+// Drag and drop triggers
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-teal-500', 'bg-teal-500/5'); });
+dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); });
+dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+// Configuration changes
+paddingSlider.addEventListener('input', (e) => { padding = parseInt(e.target.value); paddingVal.textContent = `${padding}px`; processImages(); });
+bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; bgHexInput.value = bgColor; processImages(); });
+bgHexInput.addEventListener('input', (e) => { if(/^#[0-9A-F]{6}$/i.test(e.target.value)) { bgColor = e.target.value; bgColorInput.value = bgColor; processImages(); } });
+
+ratio11.addEventListener('click', () => { targetRatio = 1; updateRatioUI(ratio11, ratio43); processImages(); });
+ratio43.addEventListener('click', () => { targetRatio = 4/3; updateRatioUI(ratio43, ratio11); processImages(); });
+
+function updateRatioUI(active, inactive) {
+  active.className = "py-1.5 px-3 rounded-lg font-medium border text-center transition-all bg-teal-500/10 border-teal-500 text-teal-400 shadow-sm shadow-teal-500/10";
+  inactive.className = "py-1.5 px-3 rounded-lg font-medium border text-center transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300 hover:border-slate-700";
+}
+
+function handleFiles(files) {
+  uploadedFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+  if (uploadedFiles.length > 0) {
+    downloadBtn.disabled = false;
+    previewContainer.classList.remove('hidden');
+    processImages();
+  }
+}
+
+// Client-side canvas calculations
+function processImages() {
+  previewContainer.innerHTML = '';
+  uploadedFiles.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.canvas ? canvas.getContext('2d') : canvas.getContext('2d');
+        
+        // Define clean boundaries
+        const targetWidth = 800;
+        const targetHeight = targetWidth / targetRatio;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // Paint backgrounds
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
+        
+        // Safe image cropping and centering limits
+        const maxImgWidth = targetWidth - (padding * 2);
+        const maxImgHeight = targetHeight - (padding * 2);
+        
+        let dWidth = img.width;
+        let dHeight = img.height;
+        const imgRatio = dWidth / dHeight;
+        
+        if (dWidth > maxImgWidth || dHeight > maxImgHeight || true) {
+          if (imgRatio > maxImgWidth / maxImgHeight) {
+            dWidth = maxImgWidth;
+            dHeight = dWidth / imgRatio;
+          } else {
+            dHeight = maxImgHeight;
+            dWidth = dHeight * imgRatio;
+          }
+        }
+        
+        const dx = (targetWidth - dWidth) / 2;
+        const dy = (targetHeight - dHeight) / 2;
+        ctx.drawImage(img, dx, dy, dWidth, dHeight);
+        
+        // Output visual components
+        const thumbContainer = document.createElement('div');
+        thumbContainer.className = "aspect-square bg-slate-950 border border-slate-800 rounded-lg p-1 flex items-center justify-center overflow-hidden";
+        const previewImg = document.createElement('img');
+        previewImg.src = canvas.toDataURL('image/jpeg', 0.8);
+        previewImg.className = "max-w-full max-h-full object-contain rounded";
+        thumbContainer.appendChild(previewImg);
+        previewContainer.appendChild(thumbContainer);
+        
+        canvas.dataset.filename = file.name.replace(/\.[^/.]+$/, "") + "_cropped.jpg";
+        thumbContainer.appendChild(canvas);
+        canvas.style.display = 'none';
+      }
+      img.src = event.target.result;
+    }
+    reader.readAsDataURL(file);
+  });
+}
+
+// Bundle outputs into one local ZIP download
+downloadBtn.addEventListener('click', async () => {
+  const zip = new JSZip();
+  const canvases = previewContainer.querySelectorAll('canvas');
+  
+  if (canvases.length === 0) return;
+  downloadBtn.textContent = 'Zipping...';
+  downloadBtn.disabled = true;
+
+  canvases.forEach((canvas) => {
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const base64Data = dataUrl.split(',')[1];
+    zip.file(canvas.dataset.filename, base64Data, {base64: true});
+  });
+
+  const content = await zip.generateAsync({type: 'blob'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(content);
+  link.download = 'cropped_thumbnails.zip';
+  link.click();
+  
+  downloadBtn.textContent = 'Download All as ZIP';
+  downloadBtn.disabled = false;
+});
