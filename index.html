@@ -1,415 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Batch Square Thumbnail Cropper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- JSZip CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Bulk Store Thumbnail Cropper</title>
+  <script src="https://jsdelivr.net"></script>
+  <script src="https://cloudflare.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold tracking-tight mb-2">Batch Square Thumbnail Cropper</h1>
-      <p class="text-slate-400">
-        Drag and drop images, adjust settings, preview thumbnails, and download them all as a ZIP.
-      </p>
-    </header>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between font-sans selection:bg-teal-500 selection:text-slate-950">
+  
+  <main class="w-full max-w-2xl px-4 py-12 flex flex-col gap-8">
+    <div class="text-center">
+      <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">Free Bulk Store Thumbnail Cropper</h1>
+      <p class="text-sm text-slate-400 mt-2">Instantly resize, pad, and watermark store thumbnails locally inside your browser.</p>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
-      <!-- Left: Drop zone + previews -->
-      <div class="space-y-6">
-        <!-- Drag & Drop Zone -->
-        <div
-          id="drop-zone"
-          class="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer bg-slate-800/60 hover:bg-slate-800 transition"
-        >
-          <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
-          <div class="flex flex-col items-center space-y-3">
-            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-700">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M3 15a4 4 0 014-4h2m4 0h2a4 4 0 014 4m-7-4V3m0 0L9 7m4-4 4 4" />
-              </svg>
-            </div>
-            <div class="text-center">
-              <p class="font-semibold">Drag & drop images here</p>
-              <p class="text-sm text-slate-400">or click to browse files</p>
-            </div>
+    <!-- Drop Zone -->
+    <div id="drop-zone" class="border-3 border-dashed border-slate-800 hover:border-teal-500/70 rounded-2xl p-10 text-center cursor-pointer transition-all bg-slate-900/30 backdrop-blur-xs group">
+      <input type="file" id="file-input" multiple accept="image/*" class="hidden">
+      <div class="text-lg font-semibold text-slate-200 group-hover:text-teal-400 transition-colors">Drag & drop product images here, or <span class="text-teal-400 underline decoration-2 underline-offset-4">browse</span></div>
+      <p class="text-xs text-slate-500 mt-2 font-mono">Processes formats like PNG, JPG, WEBP directly inside your client session.</p>
+    </div>
+
+    <!-- Options and Sliders Grid Configuration -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 border border-slate-900 rounded-2xl p-5 backdrop-blur-md">
+      <div class="flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Aspect Ratio Structure</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="ratio-1-1" class="py-2 px-4 rounded-xl font-semibold border text-sm transition-all bg-teal-500/10 border-teal-500 text-teal-400 shadow-lg shadow-teal-500/5">1:1 Square</button>
+            <button id="ratio-4-3" class="py-2 px-4 rounded-xl font-semibold border text-sm transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700">4:3 Canvas</button>
           </div>
         </div>
 
-        <!-- Previews Grid -->
         <div>
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold">Thumbnail previews</h2>
-            <span id="preview-count" class="text-xs text-slate-400">No images loaded</span>
+          <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+            <label>Padding Area Size</label>
+            <span id="padding-val" class="font-mono text-teal-400">20px</span>
           </div>
-          <div
-            id="preview-grid"
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-slate-800/60 rounded-xl p-4 min-h-[120px]"
-          >
-            <!-- Thumbnails injected here -->
-          </div>
+          <input type="range" id="padding-slider" min="0" max="120" value="20" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
         </div>
       </div>
 
-      <!-- Right: Settings + Download -->
-      <div class="space-y-6">
-        <!-- Settings Panel -->
-        <div class="bg-slate-800/60 rounded-xl p-5 space-y-5">
-          <h2 class="text-lg font-semibold mb-2">Settings</h2>
-
-          <!-- Aspect Ratio -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">Aspect ratio</label>
-            <div class="flex gap-3">
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="aspect"
-                  value="1:1"
-                  class="accent-sky-500"
-                  checked
-                  id="aspect-square"
-                />
-                <span>1:1 Square</span>
-              </label>
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="aspect"
-                  value="4:3"
-                  class="accent-sky-500"
-                  id="aspect-4-3"
-                />
-                <span>4:3 Canvas</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Padding Slider -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">
-              Padding size
-              <span id="padding-value" class="text-xs text-slate-400 ml-1">(10px)</span>
-            </label>
-            <input
-              id="padding-slider"
-              type="range"
-              min="0"
-              max="50"
-              value="10"
-              class="w-full accent-sky-500"
-            />
-          </div>
-
-          <!-- Background Color Picker -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">Background color</label>
-            <div class="flex items-center gap-3">
-              <input
-                id="bg-color"
-                type="color"
-                value="#0f172a"
-                class="h-9 w-9 rounded-md border border-slate-600 bg-slate-900"
-              />
-              <span class="text-xs text-slate-400">
-                Used to fill padding and empty canvas areas.
-              </span>
-            </div>
-          </div>
+      <div class="flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Anti-Theft Shop Watermark</label>
+          <input type="text" id="watermark-input" placeholder="e.g. @YourStoreName" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-sm text-slate-200 font-mono placeholder:text-slate-700 focus:outline-none focus:border-teal-500">
         </div>
 
-        <!-- Download Panel -->
-        <div class="bg-slate-800/60 rounded-xl p-5 space-y-4">
-          <h2 class="text-lg font-semibold mb-2">Export</h2>
-          <p class="text-sm text-slate-400">
-            Once your thumbnails look good, download them all together as a ZIP file.
-          </p>
-          <button
-            id="download-zip"
-            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition"
-            disabled
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0 4-4m-4 4V4" />
-            </svg>
-            <span>Download All as ZIP</span>
-          </button>
-          <p id="status-text" class="text-xs text-slate-400"></p>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Canvas Fill Color</label>
+          <div class="flex gap-3 items-center bg-slate-950 border border-slate-800 rounded-xl p-2">
+            <input type="color" id="bg-color" value="#ffffff" class="w-7 h-7 border-0 rounded-lg cursor-pointer bg-transparent">
+            <input type="text" id="bg-hex" value="#ffffff" class="bg-transparent text-sm text-slate-300 font-mono w-full uppercase focus:outline-none">
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Compile Actions -->
+    <button id="download-btn" class="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold py-3 px-6 rounded-2xl text-base transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.99] disabled:opacity-30 disabled:pointer-events-none" disabled>
+      Process & Export All as ZIP
+    </button>
+
+    <!-- Preview Matrix layout elements -->
+    <div id="preview-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3 hidden border-t border-slate-900 pt-6"></div>
+  </main>
+
+  <!-- Premium Invisible Upsell Banner Integration -->
+  <footer class="w-full bg-slate-900/40 border-t border-slate-900/60 p-4 text-center text-xs text-slate-400 backdrop-blur-md mt-12">
+    <div class="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 items-center justify-between">
+      <span>Tired of dragging files onto web pages manually every day?</span>
+      <a href="YOUR_GUMROAD_LINK_HERE" target="_blank" class="bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 font-semibold px-3 py-1.5 rounded-lg transition-all">
+        ⚡ Get the 1-Click Chrome Extension Layout Pro ($19)
+      </a>
+    </div>
+  </footer>
 
   <script>
-    // Basic configuration for canvas sizes
-    const CANVAS_CONFIG = {
-      "1:1": { width: 512, height: 512 },
-      "4:3": { width: 800, height: 600 }
-    };
+    let uploadedFiles = [];
+    let targetRatio = 1; 
+    let padding = 20;
+    let bgColor = '#ffffff';
 
-    const dropZone = document.getElementById("drop-zone");
-    const fileInput = document.getElementById("file-input");
-    const previewGrid = document.getElementById("preview-grid");
-    const previewCount = document.getElementById("preview-count");
-    const paddingSlider = document.getElementById("padding-slider");
-    const paddingValueLabel = document.getElementById("padding-value");
-    const bgColorInput = document.getElementById("bg-color");
-    const downloadZipBtn = document.getElementById("download-zip");
-    const statusText = document.getElementById("status-text");
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const paddingSlider = document.getElementById('padding-slider');
+    const paddingVal = document.getElementById('padding-val');
+    const watermarkInput = document.getElementById('watermark-input');
+    const bgColorInput = document.getElementById('bg-color');
+    const bgHexInput = document.getElementById('bg-hex');
+    const ratio11 = document.getElementById('ratio-1-1');
+    const ratio43 = document.getElementById('ratio-4-3');
+    const downloadBtn = document.getElementById('download-btn');
+    const previewContainer = document.getElementById('preview-container');
 
-    const aspectSquare = document.getElementById("aspect-square");
-    const aspect4_3 = document.getElementById("aspect-4-3");
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-teal-500', 'bg-teal-500/5'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); });
+    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); handleFiles(e.dataTransfer.files); });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-    let processedImages = []; // { filename, blob }
+    paddingSlider.addEventListener('input', (e) => { padding = parseInt(e.target.value); paddingVal.textContent = `${padding}px`; processImages(); });
+    watermarkInput.addEventListener('input', () => { processImages(); });
+    bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; bgHexInput.value = bgColor; processImages(); });
+    bgHexInput.addEventListener('input', (e) => { if(/^#[0-9A-F]{6}$/i.test(e.target.value)) { bgColor = e.target.value; bgColorInput.value = bgColor; processImages(); } });
 
-    function getCurrentAspect() {
-      return aspect4_3.checked ? "4:3" : "1:1";
+    ratio11.addEventListener('click', () => { targetRatio = 1; updateRatioUI(ratio11, ratio43); processImages(); });
+    ratio43.addEventListener('click', () => { targetRatio = 4/3; updateRatioUI(ratio43, ratio11); processImages(); });
+
+    function updateRatioUI(active, inactive) {
+      active.className = "py-2 px-4 rounded-xl font-semibold border text-sm transition-all bg-teal-500/10 border-teal-500 text-teal-400 shadow-lg shadow-teal-500/5";
+      inactive.className = "py-2 px-4 rounded-xl font-semibold border text-sm transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700";
     }
-
-    function getCurrentPadding() {
-      return parseInt(paddingSlider.value, 10) || 0;
-    }
-
-    function getCurrentBgColor() {
-      return bgColorInput.value || "#000000";
-    }
-
-    function updatePaddingLabel() {
-      paddingValueLabel.textContent = `(${getCurrentPadding()}px)`;
-    }
-
-    updatePaddingLabel();
-
-    // Drag & drop behavior
-    dropZone.addEventListener("click", () => fileInput.click());
-
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("border-sky-500", "bg-slate-800");
-    });
-
-    dropZone.addEventListener("dragleave", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("border-sky-500", "bg-slate-800");
-    });
-
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("border-sky-500", "bg-slate-800");
-      const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (files.length) {
-        handleFiles(files);
-      }
-    });
-
-    fileInput.addEventListener("change", (e) => {
-      const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
-      if (files.length) {
-        handleFiles(files);
-      }
-    });
-
-    // Settings change triggers reprocessing
-    [paddingSlider, bgColorInput, aspectSquare, aspect4_3].forEach(el => {
-      el.addEventListener("input", () => {
-        updatePaddingLabel();
-        if (processedImages.length > 0) {
-          // Reprocess from original files if we stored them
-          // For simplicity, we re-run using the original File objects stored in a separate array.
-          reprocessAll();
-        }
-      });
-    });
-
-    let originalFiles = []; // store original File objects for reprocessing
 
     function handleFiles(files) {
-      originalFiles = originalFiles.concat(files);
-      processedImages = [];
-      previewGrid.innerHTML = "";
-      statusText.textContent = "Processing images...";
-      downloadZipBtn.disabled = true;
+      uploadedFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      if (uploadedFiles.length > 0) {
+        downloadBtn.disabled = false;
+        previewContainer.classList.remove('hidden');
+        processImages();
+      }
+    }
 
-      let remaining = files.length;
+    function processImages() {
+      previewContainer.innerHTML = '';
+      const watermarkText = watermarkInput.value;
 
-      files.forEach((file, index) => {
+      uploadedFiles.forEach((file) => {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = function(event) {
           const img = new Image();
-          img.onload = () => {
-            const { canvas, blob } = processImageToCanvas(img, file.name);
-            addPreview(canvas, file.name);
-            processedImages.push({ filename: makeOutputName(file.name, index), blob });
-
-            remaining--;
-            if (remaining === 0) {
-              finalizeProcessing();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const targetWidth = 800;
+            const targetHeight = targetWidth / targetRatio;
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, targetWidth, targetHeight);
+            
+            const maxImgWidth = targetWidth - (padding * 2);
+            const maxImgHeight = targetHeight - (padding * 2);
+            let dWidth = img.width;
+            let dHeight = img.height;
+            const imgRatio = dWidth / dHeight;
+            
+            if (imgRatio > maxImgWidth / maxImgHeight) {
+              dWidth = maxImgWidth;
+              dHeight = dWidth / imgRatio;
+            } else {
+              dHeight = maxImgHeight;
+              dWidth = dHeight * imgRatio;
             }
-          };
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function reprocessAll() {
-      if (!originalFiles.length) return;
-      processedImages = [];
-      previewGrid.innerHTML = "";
-      statusText.textContent = "Reprocessing with new settings...";
-      downloadZipBtn.disabled = true;
-
-      let remaining = originalFiles.length;
-
-      originalFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const { canvas, blob } = processImageToCanvas(img, file.name);
-            addPreview(canvas, file.name);
-            processedImages.push({ filename: makeOutputName(file.name, index), blob });
-
-            remaining--;
-            if (remaining === 0) {
-              finalizeProcessing();
+            
+            const dx = (targetWidth - dWidth) / 2;
+            const dy = (targetHeight - dHeight) / 2;
+            ctx.drawImage(img, dx, dy, dWidth, dHeight);
+            
+            if (watermarkText.trim() !== '') {
+              ctx.save();
+              ctx.font = 'bold 36px sans-serif';
+              ctx.fillStyle = 'rgba(100, 116, 139, 0.4)'; 
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(watermarkText, targetWidth / 2, targetHeight / 2);
+              ctx.restore();
             }
-          };
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
 
-    function processImageToCanvas(img, originalName) {
-      const aspect = getCurrentAspect();
-      const padding = getCurrentPadding();
-      const bgColor = getCurrentBgColor();
-
-      const cfg = CANVAS_CONFIG[aspect];
-      const canvas = document.createElement("canvas");
-      canvas.width = cfg.width;
-      canvas.height = cfg.height;
-
-      const ctx = canvas.getContext("2d");
-
-      // Fill background
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Compute drawable area (inside padding)
-      const drawableWidth = canvas.width - padding * 2;
-      const drawableHeight = canvas.height - padding * 2;
-
-      // Scale image to fit inside drawable area without stretching
-      const scale = Math.min(drawableWidth / img.width, drawableHeight / img.height);
-
-      const targetWidth = img.width * scale;
-      const targetHeight = img.height * scale;
-
-      const x = (canvas.width - targetWidth) / 2;
-      const y = (canvas.height - targetHeight) / 2;
-
-      ctx.drawImage(img, x, y, targetWidth, targetHeight);
-
-      // Convert to Blob
-      const blob = dataURLToBlob(canvas.toDataURL("image/png"));
-
-      return { canvas, blob };
-    }
-
-    function dataURLToBlob(dataURL) {
-      const parts = dataURL.split(";base64,");
-      const contentType = parts[0].split(":")[1];
-      const raw = window.atob(parts[1]);
-      const rawLength = raw.length;
-      const uInt8Array = new Uint8Array(rawLength);
-
-      for (let i = 0; i < rawLength; ++i) {
-        uInt8Array[i] = raw.charCodeAt(i);
-      }
-
-      return new Blob([uInt8Array], { type: contentType });
-    }
-
-    function addPreview(canvas, name) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "flex flex-col items-center gap-2 bg-slate-900/60 rounded-lg p-2 border border-slate-700/60";
-
-      const thumb = document.createElement("canvas");
-      const size = 160;
-      thumb.width = size;
-      thumb.height = size;
-
-      const tctx = thumb.getContext("2d");
-      tctx.fillStyle = "#020617";
-      tctx.fillRect(0, 0, size, size);
-
-      const scale = Math.min(size / canvas.width, size / canvas.height);
-      const w = canvas.width * scale;
-      const h = canvas.height * scale;
-      const x = (size - w) / 2;
-      const y = (size - h) / 2;
-
-      tctx.drawImage(canvas, x, y, w, h);
-
-      const label = document.createElement("div");
-      label.className = "text-[10px] text-slate-400 truncate w-full text-center";
-      label.textContent = name;
-
-      wrapper.appendChild(thumb);
-      wrapper.appendChild(label);
-      previewGrid.appendChild(wrapper);
-
-      previewCount.textContent = `${previewGrid.children.length} image(s) processed`;
-    }
-
-    function makeOutputName(originalName, index) {
-      const base = originalName.replace(/\.[^/.]+$/, "");
-      const aspect = getCurrentAspect().replace(":", "x");
-      return `${base}_thumb_${aspect}_${index + 1}.png`;
-    }
-
-    function finalizeProcessing() {
-      if (processedImages.length > 0) {
-        statusText.textContent = `Ready: ${processedImages.length} thumbnail(s) processed.`;
-        downloadZipBtn.disabled = false;
-      } else {
-        statusText.textContent = "No valid images processed.";
-        downloadZipBtn.disabled = true;
-      }
-    }
-
-    // Download ZIP
-    downloadZipBtn.addEventListener("click", async () => {
-      if (!processedImages.length) return;
-
-      statusText.textContent = "Building ZIP file...";
-      downloadZipBtn.disabled = true;
-
-      try {
-        const zip = new JSZip();
-        processedImages.forEach((item) => {
-          zip.file(item.filename, item.blob);
-        });
-
-        const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, "thumbnails.zip");
-        statusText.textContent = "ZIP downloaded successfully.";
-      } catch (err) {
-        console.error(err);
-        statusText.textContent = "Error creating ZIP. Please try again.";
-      } finally {
-        downloadZipBtn.disabled = false;
-      }
-    });
-  </script>
-</body>
-</html>
+            const uiCanvas = document.createElement('canvas');
+            uiCanvas.width = targetWidth;
+uiCanvas.height = targetHeight;const uiCtx = uiCanvas.getContext('2d');uiCtx.drawImage(canvas, 0, 0);uiCtx.save();uiCtx.strokeStyle = 'rgba(20, 184, 166, 0.6)';uiCtx.lineWidth = 4;uiCtx.setLineDash([8, 8]);uiCtx.strokeRect(40, 40, targetWidth - 80, targetHeight - 80);uiCtx.font = '16px monospace';uiCtx.fillStyle = 'rgba(20, 184, 166, 0.8)';uiCtx.fillText('Etsy/Gumroad Grid Safe Area', 50, 30);uiCtx.restore();const thumbContainer = document.createElement('div');thumbContainer.className = "aspect-square bg-slate-900 border border-slate-800 rounded-2xl p-1 flex items-center justify-center overflow-hidden";const previewImg = document.createElement('img');previewImg.src = uiCanvas.toDataURL('image/jpeg', 0.8);previewImg.className = "max-w-full max-h-full object-contain rounded-xl";thumbContainer.appendChild(previewImg);previewContainer.appendChild(thumbContainer);canvas.dataset.filename = file.name.replace(/.[^/.]+$/, "") + "_cropped.jpg";thumbContainer.appendChild(canvas);canvas.style.display = 'none';}img.src = event.target.result;}reader.readAsDataURL(file);});}downloadBtn.addEventListener('click', async () => {const zip = new JSZip();const canvases = previewContainer.querySelectorAll('canvas');if (canvases.length === 0) return;downloadBtn.textContent = 'Compressing Assets...';downloadBtn.disabled = true;canvases.forEach((canvas) => {const dataUrl = canvas.toDataURL('image/jpeg', 0.9);const base64Data = dataUrl.split(',')[1];zip.file(canvas.dataset.filename, base64Data, {base64: true});});const content = await zip.generateAsync({type: 'blob'});const link = document.createElement('a');link.href = URL.createObjectURL(content);link.download = 'store_thumbnails.zip';link.click();downloadBtn.textContent = 'Process & Export All as ZIP';downloadBtn.disabled = false;});
