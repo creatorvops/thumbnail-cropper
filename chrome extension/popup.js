@@ -1,4 +1,35 @@
 /* ------------------------------
+   IMPORT RIGHT-CLICKED IMAGE
+------------------------------ */
+chrome.storage.local.get("clickedImage", data => {
+  if (data.clickedImage) {
+    const img = document.getElementById("incoming-image");
+    img.src = data.clickedImage;
+
+    img.onload = () => {
+      handleIncomingImage(img);
+      chrome.storage.local.remove("clickedImage");
+    };
+  }
+});
+
+function handleIncomingImage(imgElement) {
+  const fileName = "right_click_image.png";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = imgElement.naturalWidth;
+  canvas.height = imgElement.naturalHeight;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(imgElement, 0, 0);
+
+  canvas.toBlob(blob => {
+    const file = new File([blob], fileName, { type: "image/png" });
+    handleFiles([file]);
+  });
+}
+
+/* ------------------------------
    CONFIG
 ------------------------------ */
 const CANVAS_CONFIG = {
@@ -295,6 +326,8 @@ function dataURLToBlob(dataURL) {
   const contentType = parts[0].split(":")[1];
   const raw = atob(parts[1]);
   const uInt8Array = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) uInt8Array[i] = raw.charCodeAt(i);
+  for (let i = 0; i < raw.length; i++) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
   return new Blob([uInt8Array], { type: contentType });
 }

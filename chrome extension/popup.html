@@ -5,10 +5,7 @@
 <title>Thumbnail Cropper</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- JSZip + FileSaver -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -25,73 +22,72 @@
 
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
 
+<!-- Hidden image for right-click import -->
+<img id="incoming-image" class="hidden" />
+
 <div class="px-4 py-4">
 
-<h1 class="text-xl font-bold mb-2">Batch Thumbnail Cropper</h1>
-<p class="text-slate-400 text-sm mb-4">Safe-area guides + diagonal watermarking.</p>
+  <h1 class="text-xl font-bold mb-2">Batch Thumbnail Cropper</h1>
+  <p class="text-slate-400 text-sm mb-4">Safe-area guides + diagonal watermarking.</p>
 
-<!-- DROP ZONE -->
-<div id="drop-zone"
-     class="border-2 border-dashed border-slate-600 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-800/60 hover:bg-slate-800 transition">
-  <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
-  <p class="text-sm text-slate-300">Drop images or click</p>
-</div>
+  <!-- DROP ZONE -->
+  <div id="drop-zone"
+       class="border-2 border-dashed border-slate-600 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-800/60 hover:bg-slate-800 transition">
+    <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
+    <p class="text-sm text-slate-300">Drop images or click</p>
+  </div>
 
-<!-- SETTINGS -->
-<div class="mt-4 space-y-4">
+  <!-- SETTINGS -->
+  <div class="mt-4 space-y-4">
 
-  <!-- Aspect -->
-  <div>
-    <label class="text-sm font-medium">Aspect Ratio</label>
-    <div class="flex gap-3 mt-1">
-      <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="aspect" value="1:1" checked id="aspect-square" class="accent-sky-500" />
-        1:1 Etsy
-      </label>
-      <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="aspect" value="4:3" id="aspect-4-3" class="accent-sky-500" />
-        4:3 Gumroad
-      </label>
+    <div>
+      <label class="text-sm font-medium">Aspect Ratio</label>
+      <div class="flex gap-3 mt-1">
+        <label class="flex items-center gap-2 text-sm">
+          <input type="radio" name="aspect" value="1:1" checked id="aspect-square" class="accent-sky-500" />
+          1:1 Etsy
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="radio" name="aspect" value="4:3" id="aspect-4-3" class="accent-sky-500" />
+          4:3 Gumroad
+        </label>
+      </div>
     </div>
+
+    <div>
+      <label class="text-sm font-medium">
+        Padding <span id="padding-value" class="text-xs text-slate-400">(10px)</span>
+      </label>
+      <input id="padding-slider" type="range" min="0" max="50" value="10" class="w-full accent-sky-500" />
+    </div>
+
+    <div>
+      <label class="text-sm font-medium">Background Color</label>
+      <input id="bg-color" type="color" value="#0f172a"
+             class="mt-1 h-8 w-8 rounded border border-slate-600 bg-slate-900" />
+    </div>
+
+    <div>
+      <label class="text-sm font-medium">Watermark Text (Optional)</label>
+      <input id="watermark-text" type="text" placeholder="@MyShop"
+             class="w-full mt-1 px-3 py-2 rounded bg-slate-700 border border-slate-600 text-sm" />
+      <p class="text-xs text-slate-400">Repeated diagonally across image.</p>
+    </div>
+
   </div>
 
-  <!-- Padding -->
-  <div>
-    <label class="text-sm font-medium">
-      Padding <span id="padding-value" class="text-xs text-slate-400">(10px)</span>
-    </label>
-    <input id="padding-slider" type="range" min="0" max="50" value="10" class="w-full accent-sky-500" />
-  </div>
+  <!-- PREVIEW -->
+  <h2 class="text-sm font-semibold mt-5 mb-2">Preview</h2>
+  <div id="preview-grid" class="grid grid-cols-2 gap-3 bg-slate-800/60 p-3 rounded-lg min-h-[100px]"></div>
+  <p id="preview-count" class="text-xs text-slate-400 mt-1"></p>
 
-  <!-- Background -->
-  <div>
-    <label class="text-sm font-medium">Background Color</label>
-    <input id="bg-color" type="color" value="#0f172a"
-           class="mt-1 h-8 w-8 rounded border border-slate-600 bg-slate-900" />
-  </div>
-
-  <!-- Watermark -->
-  <div>
-    <label class="text-sm font-medium">Watermark Text (Optional)</label>
-    <input id="watermark-text" type="text" placeholder="@MyShop"
-           class="w-full mt-1 px-3 py-2 rounded bg-slate-700 border border-slate-600 text-sm" />
-    <p class="text-xs text-slate-400">Repeated diagonally across image.</p>
-  </div>
-
-</div>
-
-<!-- PREVIEW -->
-<h2 class="text-sm font-semibold mt-5 mb-2">Preview</h2>
-<div id="preview-grid" class="grid grid-cols-2 gap-3 bg-slate-800/60 p-3 rounded-lg min-h-[100px]"></div>
-<p id="preview-count" class="text-xs text-slate-400 mt-1"></p>
-
-<!-- DOWNLOAD -->
-<button id="download-zip"
-        class="mt-4 w-full px-4 py-2.5 rounded bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold disabled:opacity-40"
-        disabled>
-  Download ZIP
-</button>
-<p id="status-text" class="text-xs text-slate-400 mt-1"></p>
+  <!-- DOWNLOAD -->
+  <button id="download-zip"
+          class="mt-4 w-full px-4 py-2.5 rounded bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold disabled:opacity-40"
+          disabled>
+    Download ZIP
+  </button>
+  <p id="status-text" class="text-xs text-slate-400 mt-1"></p>
 
 </div>
 
@@ -99,7 +95,7 @@
 <div class="upgrade-banner bg-slate-800/80 backdrop-blur-md py-2 px-4 text-center border-t border-slate-700">
   <a href="https://your-upgrade-link.com"
      class="text-sky-400 hover:text-sky-300 font-semibold text-xs">
-    ⚡ Automate your shop? Get the Auto-Detector desktop sync → 
+    ⚡ Automate your shop? Get the Auto-Detector desktop sync →
   </a>
 </div>
 

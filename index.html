@@ -13,7 +13,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <style>
-  /* Watermark pattern canvas overlay */
   .upgrade-banner {
     position: fixed;
     bottom: 0;
@@ -29,7 +28,7 @@
 
 <header class="mb-8">
   <h1 class="text-3xl font-bold tracking-tight mb-2">Batch Square Thumbnail Cropper</h1>
-  <p class="text-slate-400">Now with Safe-Area Guides + Anti-Theft Watermarking + Gumroad Upgrade.</p>
+  <p class="text-slate-400">Safe-area guides + diagonal watermarking + ZIP export.</p>
 </header>
 
 <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
@@ -41,17 +40,9 @@
   <div id="drop-zone"
        class="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer bg-slate-800/60 hover:bg-slate-800 transition">
     <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
-    <div class="flex flex-col items-center space-y-3">
-      <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M3 15a4 4 0 014-4h2m4 0h2a4 4 0 014 4m-7-4V3m0 0L9 7m4-4 4 4" />
-        </svg>
-      </div>
-      <div class="text-center">
-        <p class="font-semibold">Drag & drop images here</p>
-        <p class="text-sm text-slate-400">or click to browse files</p>
-      </div>
+    <div class="text-center">
+      <p class="font-semibold">Drag & drop images here</p>
+      <p class="text-sm text-slate-400">or click to browse files</p>
     </div>
   </div>
 
@@ -90,7 +81,7 @@
       </div>
     </div>
 
-    <!-- Padding -->
+    <!-- Padding Slider -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-slate-200">
         Padding size <span id="padding-value" class="text-xs text-slate-400 ml-1">(10px)</span>
@@ -101,21 +92,16 @@
     <!-- Background Color -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-slate-200">Background color</label>
-      <div class="flex items-center gap-3">
-        <input id="bg-color" type="color" value="#0f172a"
-               class="h-9 w-9 rounded-md border border-slate-600 bg-slate-900" />
-        <span class="text-xs text-slate-400">Used to fill padding and empty canvas areas.</span>
-      </div>
+      <input id="bg-color" type="color" value="#0f172a"
+             class="h-9 w-9 rounded-md border border-slate-600 bg-slate-900" />
     </div>
 
     <!-- Watermark -->
     <div class="space-y-2">
-      <label class="block text-sm font-medium text-slate-200">Add Watermark Text (Optional)</label>
-      <input id="watermark-text"
-             type="text"
-             placeholder="@MyEtsyShop"
+      <label class="block text-sm font-medium text-slate-200">Watermark Text (Optional)</label>
+      <input id="watermark-text" type="text" placeholder="@MyShop"
              class="w-full px-3 py-2 rounded-md bg-slate-700 border border-slate-600 text-sm" />
-      <p class="text-xs text-slate-400">Will be repeated diagonally across every image.</p>
+      <p class="text-xs text-slate-400">Repeated diagonally across every image.</p>
     </div>
 
   </div>
@@ -128,11 +114,7 @@
     <button id="download-zip"
             class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition"
             disabled>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0 4-4m-4 4V4" />
-      </svg>
-      <span>Download All as ZIP</span>
+      Download All as ZIP
     </button>
 
     <p id="status-text" class="text-xs text-slate-400"></p>
@@ -143,11 +125,11 @@
 </div>
 </div>
 
-<!-- GUMROAD UPGRADE BANNER -->
+<!-- UPGRADE BANNER -->
 <div class="upgrade-banner bg-slate-800/80 backdrop-blur-md py-3 px-4 text-center border-t border-slate-700">
   <a href="https://your-upgrade-link.com"
      class="text-sky-400 hover:text-sky-300 font-semibold text-sm tracking-wide">
-    ⚡ Automate your shop? Get the Auto-Detector desktop sync. <span class="underline">Upgrade here →</span>
+    ⚡ Automate your shop? Get the Auto-Detector desktop sync → 
   </a>
 </div>
 
@@ -227,7 +209,7 @@ function handleFiles(files) {
   originalFiles = originalFiles.concat(files);
   processedImages = [];
   previewGrid.innerHTML = "";
-  statusText.textContent = "Processing images...";
+  statusText.textContent = "Processing...";
   downloadZipBtn.disabled = true;
 
   let remaining = files.length;
@@ -449,4 +431,12 @@ function dataURLToBlob(dataURL) {
   const contentType = parts[0].split(":")[1];
   const raw = atob(parts[1]);
   const uInt8Array = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) uInt8Array[i
+  for (let i = 0; i < raw.length; i++) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+  return new Blob([uInt8Array], { type: contentType });
+}
+</script>
+
+</body>
+</html>

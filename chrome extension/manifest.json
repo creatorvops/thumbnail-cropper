@@ -1,11 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "Batch Square Thumbnail Cropper",
-  "description": "Batch cropper with safe-area guides, diagonal watermarking, and ZIP export.",
-  "version": "1.0",
+  "name": "Batch Thumbnail Cropper",
+  "description": "Right-click image cropper with safe-area guides and diagonal watermarking.",
+  "version": "2.0",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Thumbnail Cropper"
   },
-  "permissions": []
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ]
 }
