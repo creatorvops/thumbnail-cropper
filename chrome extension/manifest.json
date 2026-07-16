@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Batch Thumbnail Cropper",
+  "name": "BatchCrop Pro (Thumbnail Cropper)",
   "description": "Right-click image cropper with safe-area guides and diagonal watermarking.",
   "version": "2.0",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Thumbnail Cropper"
+    "default_title": "BatchCrop Pro"
   },
   "permissions": [
     "contextMenus",

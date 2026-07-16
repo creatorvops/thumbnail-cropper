@@ -1,13 +1,15 @@
 chrome.runtime.onInstalled.addListener(() => {
+  // Right-click anywhere
   chrome.contextMenus.create({
     id: "openCropper",
-    title: "Open Thumbnail Cropper",
+    title: "Open BatchCrop Pro (Thumbnail Cropper)",
     contexts: ["all"]
   });
 
+  // Right-click an image
   chrome.contextMenus.create({
     id: "cropThisImage",
-    title: "Crop this image",
+    title: "Crop this image with BatchCrop Pro",
     contexts: ["image"]
   });
 });
