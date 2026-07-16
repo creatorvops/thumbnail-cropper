@@ -1,5 +1,5 @@
 let uploadedFiles = [];
-let targetRatio = 1; // Default 1:1 square
+let targetRatio = 1; 
 let padding = 20;
 let bgColor = '#ffffff';
 
@@ -7,6 +7,7 @@ const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const paddingSlider = document.getElementById('padding-slider');
 const paddingVal = document.getElementById('padding-val');
+const watermarkInput = document.getElementById('watermark-input');
 const bgColorInput = document.getElementById('bg-color');
 const bgHexInput = document.getElementById('bg-hex');
 const ratio11 = document.getElementById('ratio-1-1');
@@ -14,15 +15,14 @@ const ratio43 = document.getElementById('ratio-4-3');
 const downloadBtn = document.getElementById('download-btn');
 const previewContainer = document.getElementById('preview-container');
 
-// Drag and drop triggers
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-teal-500', 'bg-teal-500/5'); });
 dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); });
 dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-teal-500', 'bg-teal-500/5'); handleFiles(e.dataTransfer.files); });
 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-// Configuration changes
 paddingSlider.addEventListener('input', (e) => { padding = parseInt(e.target.value); paddingVal.textContent = `${padding}px`; processImages(); });
+watermarkInput.addEventListener('input', () => { processImages(); });
 bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; bgHexInput.value = bgColor; processImages(); });
 bgHexInput.addEventListener('input', (e) => { if(/^#[0-9A-F]{6}$/i.test(e.target.value)) { bgColor = e.target.value; bgColorInput.value = bgColor; processImages(); } });
 
@@ -43,55 +43,80 @@ function handleFiles(files) {
   }
 }
 
-// Client-side canvas calculations
 function processImages() {
   previewContainer.innerHTML = '';
+  const watermarkText = watermarkInput.value;
+
   uploadedFiles.forEach((file) => {
     const reader = new FileReader();
     reader.onload = function(event) {
       const img = new Image();
       img.onload = function() {
+        // High quality rendering canvas
         const canvas = document.createElement('canvas');
-        const ctx = canvas.canvas ? canvas.getContext('2d') : canvas.getContext('2d');
-        
-        // Define clean boundaries
+        const ctx = canvas.getContext('2d');
         const targetWidth = 800;
         const targetHeight = targetWidth / targetRatio;
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         
-        // Paint backgrounds
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, targetWidth, targetHeight);
         
-        // Safe image cropping and centering limits
         const maxImgWidth = targetWidth - (padding * 2);
         const maxImgHeight = targetHeight - (padding * 2);
-        
         let dWidth = img.width;
         let dHeight = img.height;
         const imgRatio = dWidth / dHeight;
         
-        if (dWidth > maxImgWidth || dHeight > maxImgHeight || true) {
-          if (imgRatio > maxImgWidth / maxImgHeight) {
-            dWidth = maxImgWidth;
-            dHeight = dWidth / imgRatio;
-          } else {
-            dHeight = maxImgHeight;
-            dWidth = dHeight * imgRatio;
-          }
+        if (imgRatio > maxImgWidth / maxImgHeight) {
+          dWidth = maxImgWidth;
+          dHeight = dWidth / imgRatio;
+        } else {
+          dHeight = maxImgHeight;
+          dWidth = dHeight * imgRatio;
         }
         
         const dx = (targetWidth - dWidth) / 2;
         const dy = (targetHeight - dHeight) / 2;
         ctx.drawImage(img, dx, dy, dWidth, dHeight);
         
-        // Output visual components
+        if (watermarkText.trim() !== '') {
+          ctx.save();
+          ctx.font = 'bold 36px sans-serif';
+          ctx.fillStyle = 'rgba(100, 116, 139, 0.4)'; 
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(watermarkText, targetWidth / 2, targetHeight / 2);
+          ctx.restore();
+        }
+
+        // Display interface canvas (Adds Platform Outlines for UI rendering)
+        const uiCanvas = document.createElement('canvas');
+        uiCanvas.width = targetWidth;
+        uiCanvas.height = targetHeight;
+        const uiCtx = uiCanvas.getContext('2d');
+        uiCtx.drawImage(canvas, 0, 0);
+
+        // Draw Safe Zone Box Layout guides
+        uiCtx.save();
+        uiCtx.strokeStyle = 'rgba(20, 184, 166, 0.6)'; 
+        uiCtx.lineWidth = 4;
+        uiCtx.setLineDash([8, 8]);
+        uiCtx.strokeRect(40, 40, targetWidth - 80, targetHeight - 80);
+        
+        uiCtx.font = '16px monospace';
+        uiCtx.fillStyle = 'rgba(20, 184, 166, 0.8)';
+        uiCtx.fillText('Etsy/Gumroad Grid Safe Area', 50, 30);
+        uiCtx.restore();
+        
         const thumbContainer = document.createElement('div');
         thumbContainer.className = "aspect-square bg-slate-950 border border-slate-800 rounded-lg p-1 flex items-center justify-center overflow-hidden";
+        
         const previewImg = document.createElement('img');
-        previewImg.src = canvas.toDataURL('image/jpeg', 0.8);
+        previewImg.src = uiCanvas.toDataURL('image/jpeg', 0.8);
         previewImg.className = "max-w-full max-h-full object-contain rounded";
+        
         thumbContainer.appendChild(previewImg);
         previewContainer.appendChild(thumbContainer);
         
@@ -105,12 +130,11 @@ function processImages() {
   });
 }
 
-// Bundle outputs into one local ZIP download
 downloadBtn.addEventListener('click', async () => {
   const zip = new JSZip();
   const canvases = previewContainer.querySelectorAll('canvas');
-  
   if (canvases.length === 0) return;
+  
   downloadBtn.textContent = 'Zipping...';
   downloadBtn.disabled = true;
 
