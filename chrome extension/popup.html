@@ -1,65 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Batch Thumbnail Cropper Pro</title>
-  <script src="https://jsdelivr.net"></script>
-  <script src="https://cloudflare.com"></script>
+<meta charset="UTF-8" />
+<title>Thumbnail Cropper</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- JSZip + FileSaver -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<style>
+  body { width: 420px; }
+  .upgrade-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 w-96 p-4 font-sans selection:bg-teal-500 selection:text-slate-900">
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-      <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">Thumbnail Cropper Pro</h1>
-      <span class="text-xs bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded text-teal-400 font-mono">v1.1</span>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
+
+<div class="px-4 py-4">
+
+<h1 class="text-xl font-bold mb-2">Batch Thumbnail Cropper</h1>
+<p class="text-slate-400 text-sm mb-4">Safe-area guides + diagonal watermarking.</p>
+
+<!-- DROP ZONE -->
+<div id="drop-zone"
+     class="border-2 border-dashed border-slate-600 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-800/60 hover:bg-slate-800 transition">
+  <input id="file-input" type="file" accept="image/*" multiple class="hidden" />
+  <p class="text-sm text-slate-300">Drop images or click</p>
+</div>
+
+<!-- SETTINGS -->
+<div class="mt-4 space-y-4">
+
+  <!-- Aspect -->
+  <div>
+    <label class="text-sm font-medium">Aspect Ratio</label>
+    <div class="flex gap-3 mt-1">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="aspect" value="1:1" checked id="aspect-square" class="accent-sky-500" />
+        1:1 Etsy
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="aspect" value="4:3" id="aspect-4-3" class="accent-sky-500" />
+        4:3 Gumroad
+      </label>
     </div>
-
-    <!-- Image Upload Area -->
-    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-teal-500 rounded-xl p-5 text-center cursor-pointer transition-colors bg-slate-950/50">
-      <input type="file" id="file-input" multiple accept="image/*" class="hidden">
-      <div class="text-sm font-medium text-slate-300">Drop images here or <span class="text-teal-400 underline decoration-2 underline-offset-2">browse</span></div>
-      <div class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP</div>
-    </div>
-
-    <!-- Controls Panel -->
-    <div class="bg-slate-950/40 rounded-xl p-3 border border-slate-800/60 flex flex-col gap-3 text-xs">
-      <div>
-        <label class="block text-slate-400 mb-1 font-medium">Canvas Aspect Ratio</label>
-        <div class="grid grid-cols-2 gap-2">
-          <button id="ratio-1-1" class="py-1.5 px-3 rounded-lg font-medium border text-center transition-all bg-teal-500/10 border-teal-500 text-teal-400 shadow-sm shadow-teal-500/10">1:1 Square</button>
-          <button id="ratio-4-3" class="py-1.5 px-3 rounded-lg font-medium border text-center transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300 hover:border-slate-700">4:3 Canvas</button>
-        </div>
-      </div>
-
-      <div>
-        <div class="flex justify-between text-slate-400 mb-1 font-medium">
-          <label>Padding around image</label>
-          <span id="padding-val" class="font-mono text-teal-400">20px</span>
-        </div>
-        <input type="range" id="padding-slider" min="0" max="100" value="20" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
-      </div>
-
-      <div>
-        <label class="block text-slate-400 mb-1 font-medium">Anti-Theft Watermark Text</label>
-        <input type="text" id="watermark-input" placeholder="e.g. @YourStoreName" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-slate-300 font-mono placeholder:text-slate-600 focus:outline-none focus:border-teal-500">
-      </div>
-
-      <div>
-        <label class="block text-slate-400 mb-1 font-medium">Background Color</label>
-        <div class="flex gap-2 items-center bg-slate-900 border border-slate-800 rounded-lg p-1.5">
-          <input type="color" id="bg-color" value="#ffffff" class="w-6 h-6 border-0 rounded cursor-pointer bg-transparent">
-          <input type="text" id="bg-hex" value="#ffffff" class="bg-transparent text-slate-300 font-mono w-full uppercase focus:outline-none">
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions & Previews -->
-    <button id="download-btn" class="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-semibold py-2 px-4 rounded-xl transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none" disabled>
-      Download All as ZIP
-    </button>
-
-    <div id="preview-container" class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1 hidden border-t border-slate-800 pt-3"></div>
   </div>
 
-  <script src="popup.js"></script>
+  <!-- Padding -->
+  <div>
+    <label class="text-sm font-medium">
+      Padding <span id="padding-value" class="text-xs text-slate-400">(10px)</span>
+    </label>
+    <input id="padding-slider" type="range" min="0" max="50" value="10" class="w-full accent-sky-500" />
+  </div>
+
+  <!-- Background -->
+  <div>
+    <label class="text-sm font-medium">Background Color</label>
+    <input id="bg-color" type="color" value="#0f172a"
+           class="mt-1 h-8 w-8 rounded border border-slate-600 bg-slate-900" />
+  </div>
+
+  <!-- Watermark -->
+  <div>
+    <label class="text-sm font-medium">Watermark Text (Optional)</label>
+    <input id="watermark-text" type="text" placeholder="@MyShop"
+           class="w-full mt-1 px-3 py-2 rounded bg-slate-700 border border-slate-600 text-sm" />
+    <p class="text-xs text-slate-400">Repeated diagonally across image.</p>
+  </div>
+
+</div>
+
+<!-- PREVIEW -->
+<h2 class="text-sm font-semibold mt-5 mb-2">Preview</h2>
+<div id="preview-grid" class="grid grid-cols-2 gap-3 bg-slate-800/60 p-3 rounded-lg min-h-[100px]"></div>
+<p id="preview-count" class="text-xs text-slate-400 mt-1"></p>
+
+<!-- DOWNLOAD -->
+<button id="download-zip"
+        class="mt-4 w-full px-4 py-2.5 rounded bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold disabled:opacity-40"
+        disabled>
+  Download ZIP
+</button>
+<p id="status-text" class="text-xs text-slate-400 mt-1"></p>
+
+</div>
+
+<!-- UPGRADE BANNER -->
+<div class="upgrade-banner bg-slate-800/80 backdrop-blur-md py-2 px-4 text-center border-t border-slate-700">
+  <a href="https://your-upgrade-link.com"
+     class="text-sky-400 hover:text-sky-300 font-semibold text-xs">
+    ⚡ Automate your shop? Get the Auto-Detector desktop sync → 
+  </a>
+</div>
+
+<script src="popup.js"></script>
 </body>
 </html>

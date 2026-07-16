@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Batch Store Thumbnail Cropper",
-  "version": "1.1",
-  "description": "Batch crop, pad, and watermark store product images into perfect squares instantly with platform safe-zone guides.",
+  "name": "Batch Square Thumbnail Cropper",
+  "description": "Batch cropper with safe-area guides, diagonal watermarking, and ZIP export.",
+  "version": "1.0",
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_title": "Thumbnail Cropper"
   },
   "permissions": []
 }
